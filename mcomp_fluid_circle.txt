@@ -1,0 +1,103 @@
+!mcomp_fluid_circle
+!Rodrigo Coelho 109747
+!Joaquim Neves 110615
+!Grupo 27
+
+finish
+/clear
+
+/filename, fluid_circle
+/title, fluid
+
+/prep7 
+KEYW, PR_THERM, 1
+
+!parameters
+
+LL = 4
+HH = 2
+X_cyl = 4
+Y_cyl = 0
+R_cyl = 1
+XP = 3.55
+YP = 0.95
+Uo = 10
+dens = 1.2
+
+
+ET, 1, PLANE55
+MP, KXX, 1, 1
+
+!geometry
+
+RECTNG, 0, LL , 0, HH 
+CYL4, X_cyl, Y_cyl, R_cyl 
+ASBA, 1, 2
+
+!mesh
+
+LSEL, S, LOC, X, X_cyl-R_cyl, X_cyl  
+LSEL, R, LOC, Y, 0, R_cyl
+LESIZE, ALL, 0.05 
+LSEL, ALL         
+
+ESIZE, 0.33           
+
+MSHAPE, 1, 2D        !Define T3 elements
+MSHKEY, 0               
+
+AMESH, ALL
+
+cpintf, all 
+
+!boundary conditions
+
+lsel,s,line,,10
+nsll,r,0
+dl,all,,temp,0  
+allsel
+
+lsel,s,line,, 4
+nsll,r,0
+SFL,all,HFLUX,10
+allsel
+
+finish
+
+/solu
+solve
+finish
+
+
+/post1
+set, last
+
+
+!mesh convergence
+
+Target_Node = NODE(XP, YP, 0)  
+*GET, Result_Val, NODE, Target_Node, TF, SUM
+*Status, Result_Val
+
+
+
+!pressure
+
+ETABLE, VEL, TF, SUM
+
+SMULT, V_SQ, VEL, VEL
+V_in2 = Uo**2
+
+SADD, V_DIFF, V_SQ, , -1, 1, V_in2
+
+EE = 0.5*dens
+SMULT, P_loc, V_DIFF, , EE
+
+SADD, PRESS, P_loc, , 1, 1, P_in
+
+
+/contour, 1, 25
+/device, vector, off  !off para distribuição de pressão / on para isolinhas
+PLETAB, PRESS, AVG
+
+
